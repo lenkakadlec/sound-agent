@@ -1,0 +1,118 @@
+# Architecture
+
+SoundAgent is a multi-tenant project management platform with an embedded AI assistant and voice interface, built on Next.js App Router.
+
+## Stack
+
+| Layer          | Technology                                       |
+| -------------- | ------------------------------------------------ |
+| Framework      | Next.js 16 (App Router, React Server Components) |
+| Language       | TypeScript                                       |
+| Database       | PostgreSQL (Supabase)                            |
+| ORM            | Prisma                                           |
+| Auth           | NextAuth.js (credentials + email)                |
+| AI             | Anthropic Claude (Haiku)                         |
+| Speech-to-Text | Groq Whisper / OpenAI Whisper                    |
+| Text-to-Speech | Google Cloud TTS / Web Speech API                |
+| Real-time      | Pusher                                           |
+| Styling        | Tailwind CSS + Radix UI                          |
+| Billing        | Lemon Squeezy                                    |
+| Error tracking | Sentry                                           |
+| Email          | Nodemailer (SMTP)                                |
+
+## Repository layout
+
+```
+src/
+├── app/                  # Next.js App Router pages and API routes
+│   ├── api/              # Route handlers (ai, voice, auth, webhooks, …)
+│   ├── dashboard/        # Organisation overview
+│   ├── projects/         # Project board and activity management
+│   ├── org/              # Organisation settings and members
+│   ├── audit/            # Audit log viewer
+│   ├── archived/         # Archived items
+│   └── …                 # Auth flows, onboarding, billing, legal
+├── components/
+│   ├── ai/               # AI sidebar, voice controls, conversation UI
+│   └── activities/       # Kanban board, activity list, detail modal
+├── hooks/                # Shared React hooks
+├── lib/
+│   ├── ai/               # AI integration (client, context, tools, conversation)
+│   ├── auth/             # Auth helpers and session resolution
+│   ├── rbac/             # Role-based access control
+│   ├── db/               # Prisma client
+│   ├── audit/            # Audit log writer
+│   └── …                 # Email, crypto, rate-limiting, notifications
+└── types/                # Shared TypeScript types and Prisma enums
+```
+
+## Data model
+
+```
+User
+ └── Membership (role: OWNER | ADMIN | MEMBER) ──→ Organization
+                                                      ├── Project
+                                                      │    ├── Activity (task/event, tree structure)
+                                                      │    │    └── ActivityCategory
+                                                      ├── AuditLog
+                                                      ├── Invite
+                                                      ├── Notification
+                                                      └── AiConversation
+                                                           └── AiConversationMessage
+```
+
+- `Activity` is self-referential (`parentId`) for subtask hierarchies.
+- `Membership.role` drives all permission checks via a central RBAC module.
+- Conversation messages are encrypted at rest with AES-256-GCM.
+
+## Authentication
+
+- NextAuth.js credentials provider (email + bcrypt).
+- Email verification on signup; password reset via tokenised email links.
+- `activeOrgId` stored in an `httpOnly` cookie for org-scoped request resolution without an extra DB round-trip.
+
+## Multi-tenancy
+
+Every query is scoped by `organizationId`. `requireProject` and `requireMembership` server helpers enforce this boundary before any data is returned.
+
+## Role-based access control
+
+A single `can(role, permission)` function encodes all permission rules. Every mutation — in server actions and AI tool calls — passes through this check before touching the database.
+
+## AI assistant
+
+The AI sidebar provides a persistent conversational interface accessible from any page. User messages are sent to `/api/ask`, which resolves the appropriate response strategy based on intent and returns either a direct answer or the result of tool-use against the database.
+
+The assistant can:
+
+- Answer questions about the organisation's projects, tasks, members and audit history
+- Navigate the app
+- Perform mutations: create/update/delete tasks, invite members, switch organisations
+
+Conversation history is persisted per-user and provided as context on each request alongside a snapshot of the organisation's data, so the model can answer common questions without additional database lookups.
+
+Potentially destructive operations (delete, invite) show a confirmation dialog before execution.
+
+## Voice interface
+
+Voice mode layers hands-free interaction on top of the AI assistant. Audio is captured in the browser, transcribed server-side, and the AI's reply is spoken aloud. The loop is fully automatic: speech is submitted, the AI responds, the reply is spoken, and recording restarts.
+
+## Audit logging
+
+Every mutation writes a structured row to `AuditLog` with actor, action, entity and metadata. The log is surfaced in `/audit` and is available as context to the AI assistant.
+
+## Real-time notifications
+
+Server-side events trigger Pusher channel messages. The client subscribes on mount and renders an in-app notification feed backed by a persisted `Notification` table.
+
+## Billing
+
+Lemon Squeezy handles subscriptions. A webhook at `/api/webhooks/lemonsqueezy` processes subscription events and updates the user's `plan` field. Feature flags (`NEXT_PUBLIC_FEATURE_FLAGS`) control feature availability per plan.
+
+## Security
+
+- AES-256-GCM field-level encryption for conversation messages and other sensitive content.
+- RBAC enforced at every server boundary, including AI tool calls.
+- Rate limiting on AI and voice endpoints.
+- Per-user daily budget cap on AI usage.
+- `httpOnly` + `sameSite: lax` cookies for session and org context.
