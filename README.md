@@ -4,7 +4,7 @@
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
-SoundAgent is a multi-tenant SaaS platform where the AI assistant is a first-class citizen — not a chatbot bolted on the side. It can answer questions about your organisation, navigate the app, and perform mutations (create tasks, invite members, switch orgs) through typed tool calls backed by real database queries. A hands-free voice loop lets you run the whole app without touching a keyboard.
+SoundAgent is a multi-tenant SaaS platform where the AI assistant is a first-class citizen — not a chatbot bolted on the side. It can answer questions about your organisation, navigate the app, and perform mutations (create tasks, invite members, switch orgs) through typed tool calls backed by real database queries. A hands-free, real-time speech-to-speech loop lets you run the whole app without touching a keyboard.
 
 ---
 
@@ -16,7 +16,7 @@ SoundAgent is a multi-tenant SaaS platform where the AI assistant is a first-cla
 
 - **Kanban board** — drag-and-drop tasks across status columns, subtask hierarchies, categories, assignees, due dates and recurrence
 - **AI assistant** — conversational interface that understands your org's data and can act on it; full conversation history persisted per user
-- **Voice mode** — hands-free loop: speak a command, AI responds, reply is spoken aloud, recording restarts automatically
+- **Voice mode** — hands-free, real-time **speech-to-speech**: talk to the assistant and it talks back with sub-second latency, calling the same tools to read and change your data mid-conversation
 - **Audit log** — every mutation is logged with actor, entity and metadata; queryable by the AI
 - **Multi-tenancy** — org switching, role-based access control (OWNER / ADMIN / MEMBER / VIEWER), email invitations
 - **Real-time notifications** — Pusher-backed in-app feed
@@ -64,6 +64,7 @@ SoundAgent is a multi-tenant SaaS platform where the AI assistant is a first-cla
 ![Prisma](https://img.shields.io/badge/Prisma-2d3748?logo=prisma)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169e1?logo=postgresql&logoColor=white)
 ![Anthropic](https://img.shields.io/badge/Claude_Haiku-d97706?logo=anthropic&logoColor=white)
+![OpenAI Realtime](https://img.shields.io/badge/OpenAI_Realtime-412991?logo=openai&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-06b6d4?logo=tailwindcss&logoColor=white)
 ![Pusher](https://img.shields.io/badge/Pusher-300d4f?logo=pusher)
 
@@ -72,9 +73,8 @@ SoundAgent is a multi-tenant SaaS platform where the AI assistant is a first-cla
 | Framework | Next.js 16 App Router + React Server Components |
 | Database  | PostgreSQL via Prisma on Supabase               |
 | Auth      | NextAuth.js (credentials + email verification)  |
-| AI        | Anthropic Claude Haiku                          |
-| STT       | Groq Whisper / OpenAI Whisper                   |
-| TTS       | Google Cloud TTS / Web Speech API               |
+| AI (text) | Anthropic Claude Haiku                          |
+| Voice     | OpenAI Realtime API (`gpt-realtime`, speech-to-speech over WebRTC) |
 | Real-time | Pusher private channels                         |
 | Billing   | Lemon Squeezy                                   |
 | Styling   | Tailwind CSS + Radix UI                         |
@@ -83,7 +83,7 @@ SoundAgent is a multi-tenant SaaS platform where the AI assistant is a first-cla
 
 ## Architecture
 
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for a full breakdown of the data model, auth, AI pipeline, voice interface, RBAC and security approach.
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for a full breakdown of the data model, auth, AI assistant, voice interface, RBAC and security approach.
 
 ---
 

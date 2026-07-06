@@ -11,9 +11,8 @@ SoundAgent is a multi-tenant project management platform with an embedded AI ass
 | Database       | PostgreSQL (Supabase)                            |
 | ORM            | Prisma                                           |
 | Auth           | NextAuth.js (credentials + email)                |
-| AI             | Anthropic Claude (Haiku)                         |
-| Speech-to-Text | Groq Whisper / OpenAI Whisper                    |
-| Text-to-Speech | Google Cloud TTS / Web Speech API                |
+| AI (text)      | Anthropic Claude (Haiku)                         |
+| Voice          | OpenAI Realtime API (`gpt-realtime`, speech-to-speech over WebRTC) |
 | Real-time      | Pusher                                           |
 | Styling        | Tailwind CSS + Radix UI                          |
 | Billing        | Lemon Squeezy                                    |
@@ -81,7 +80,7 @@ A single `can(role, permission)` function encodes all permission rules. Every mu
 
 ## AI assistant
 
-The AI sidebar provides a persistent conversational interface accessible from any page. User messages are sent to `/api/ask`, which resolves the appropriate response strategy based on intent and returns either a direct answer or the result of tool-use against the database.
+The AI sidebar provides a persistent conversational interface accessible from any page. User messages are sent to `/api/ask`. A deterministic fast-path resolves instant navigation without an LLM call; everything else runs through an agentic tool-calling loop that either answers directly or acts on the database through typed tools, returning the result for the model to narrate.
 
 The assistant can:
 
@@ -95,7 +94,9 @@ Potentially destructive operations (delete, invite) show a confirmation dialog b
 
 ## Voice interface
 
-Voice mode layers hands-free interaction on top of the AI assistant. Audio is captured in the browser, transcribed server-side, and the AI's reply is spoken aloud. The loop is fully automatic: speech is submitted, the AI responds, the reply is spoken, and recording restarts.
+Voice mode is a real-time **speech-to-speech** loop built on the OpenAI Realtime API. The browser opens a WebRTC connection directly to the model, authenticated with a short-lived ephemeral key minted server-side (`/api/voice/session`) so the main API key never reaches the client. Audio streams both ways over the peer connection — the model listens, decides, and speaks back in a single pass, with no separate transcription or text-to-speech step. Server-side voice-activity detection handles turn-taking, and live transcripts of both sides are rendered in the conversation UI.
+
+The voice agent exposes the app's capabilities through its own function tools (list / create / update / delete tasks, navigate). Tool calls arrive over the WebRTC data channel and execute against the same rate-limited, org-scoped API routes the text assistant uses, with the result streamed back for the model to narrate. End-to-end turn latency is instrumented as spans for percentile (p50/p95) monitoring.
 
 ## Audit logging
 
