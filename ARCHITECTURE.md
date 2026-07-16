@@ -11,13 +11,15 @@ SoundAgent is a multi-tenant project management platform with an embedded AI ass
 | Database       | PostgreSQL (Supabase)                            |
 | ORM            | Prisma                                           |
 | Auth           | NextAuth.js (credentials + email)                |
-| AI (text)      | Anthropic Claude (Haiku)                         |
+| AI (text)      | Anthropic Claude Haiku 4.5                        |
+| AI (embeddings)| OpenAI `text-embedding-3-small` + pgvector       |
 | Voice          | OpenAI Realtime API (`gpt-realtime`, speech-to-speech over WebRTC) |
 | Real-time      | Pusher                                           |
 | Styling        | Tailwind CSS + Radix UI                          |
 | Billing        | Lemon Squeezy                                    |
+| Analytics      | PostHog                                          |
 | Error tracking | Sentry                                           |
-| Email          | Nodemailer (SMTP)                                |
+| Email          | ZeptoMail (Send Mail API)                        |
 
 ## Repository layout
 
@@ -49,7 +51,7 @@ src/
 
 ```
 User
- └── Membership (role: OWNER | ADMIN | MEMBER) ──→ Organization
+ └── Membership (role: OWNER | ADMIN | MEMBER | VIEWER) ──→ Organization
                                                       ├── Project
                                                       │    ├── Activity (task/event, tree structure)
                                                       │    │    └── ActivityCategory
@@ -61,6 +63,7 @@ User
 ```
 
 - `Activity` is self-referential (`parentId`) for subtask hierarchies.
+- `Activity` carries a `vector(1536)` embedding (pgvector) for semantic retrieval.
 - `Membership.role` drives all permission checks via a central RBAC module.
 - Conversation messages are encrypted at rest with AES-256-GCM.
 
@@ -88,7 +91,7 @@ The assistant can:
 - Navigate the app
 - Perform mutations: create/update/delete tasks, invite members, switch organisations
 
-Conversation history is persisted per-user and provided as context on each request alongside a snapshot of the organisation's data, so the model can answer common questions without additional database lookups.
+Conversation history is persisted per-user and provided as context on each request alongside a snapshot of the organisation's data, so the model can answer common questions without additional database lookups. For open-ended questions, the question is embedded (OpenAI `text-embedding-3-small`) and the most relevant activities are retrieved by cosine distance against their pgvector embeddings (`ORDER BY embedding <=> query`), so context stays relevant as an org's data grows.
 
 Potentially destructive operations (delete, invite) show a confirmation dialog before execution.
 

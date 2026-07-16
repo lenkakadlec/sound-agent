@@ -15,7 +15,7 @@ SoundAgent is a multi-tenant SaaS platform where the AI assistant is a first-cla
 ## Features
 
 - **Kanban board** — drag-and-drop tasks across status columns, subtask hierarchies, categories, assignees, due dates and recurrence
-- **AI assistant** — conversational interface that understands your org's data and can act on it; full conversation history persisted per user
+- **AI assistant** — conversational interface that understands your org's data and can act on it; semantic retrieval (pgvector) surfaces the most relevant activities as context, and full conversation history is persisted per user
 - **Voice mode** — hands-free, real-time **speech-to-speech**: talk to the assistant and it talks back with sub-second latency, calling the same tools to read and change your data mid-conversation
 - **Audit log** — every mutation is logged with actor, entity and metadata; queryable by the AI
 - **Multi-tenancy** — org switching, role-based access control (OWNER / ADMIN / MEMBER / VIEWER), email invitations
@@ -63,20 +63,25 @@ SoundAgent is a multi-tenant SaaS platform where the AI assistant is a first-cla
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?logo=typescript&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-2d3748?logo=prisma)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169e1?logo=postgresql&logoColor=white)
-![Anthropic](https://img.shields.io/badge/Claude_Haiku-d97706?logo=anthropic&logoColor=white)
+![Anthropic](https://img.shields.io/badge/Claude_Haiku_4.5-d97706?logo=anthropic&logoColor=white)
 ![OpenAI Realtime](https://img.shields.io/badge/OpenAI_Realtime-412991?logo=openai&logoColor=white)
+![pgvector](https://img.shields.io/badge/pgvector-4169e1?logo=postgresql&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-06b6d4?logo=tailwindcss&logoColor=white)
 ![Pusher](https://img.shields.io/badge/Pusher-300d4f?logo=pusher)
+![PostHog](https://img.shields.io/badge/PostHog-1d4aff?logo=posthog&logoColor=white)
 
 | Layer     | Technology                                      |
 | --------- | ----------------------------------------------- |
 | Framework | Next.js 16 App Router + React Server Components |
 | Database  | PostgreSQL via Prisma on Supabase               |
 | Auth      | NextAuth.js (credentials + email verification)  |
-| AI (text) | Anthropic Claude Haiku                          |
+| AI (text) | Anthropic Claude Haiku 4.5                      |
+| Retrieval | OpenAI embeddings + pgvector semantic search    |
 | Voice     | OpenAI Realtime API (`gpt-realtime`, speech-to-speech over WebRTC) |
 | Real-time | Pusher private channels                         |
 | Billing   | Lemon Squeezy                                   |
+| Analytics | PostHog                                         |
+| Email     | ZeptoMail (Send Mail API)                       |
 | Styling   | Tailwind CSS + Radix UI                         |
 
 ---
